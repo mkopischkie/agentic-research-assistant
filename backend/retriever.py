@@ -15,7 +15,7 @@ def add_to_storage(path):
             vec = embed_image(chunk['content'])
         storage.append({'vector': vec, 'meta': chunk})
 
-def retrieve(query, top_k=5):
+def retrieve(query, top_k=15):
     """embed the query -> score every stored chunk -> return top k"""
     q = np.array(embed_text(query, prefix='search_query'))
     scored = []
