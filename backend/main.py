@@ -2,7 +2,11 @@
 from fastapi import FastAPI, UploadFile, File
 from pathlib import Path
 from dotenv import load_dotenv
+from pydantic import BaseModel
 import os
+
+from agent import answer
+from retriever import add_to_storage
 
 load_dotenv()
 app = FastAPI(title="Agentic Research Assistant")
@@ -22,4 +26,14 @@ async def upload(file: UploadFile = File(...)):
     safe_name = Path(file.filename or "upload").name   # strip path traversal
     dest = UPLOAD_DIR / safe_name
     dest.write_bytes(await file.read())
+    add_to_storage(str(dest))   # ingest -> chunk -> embed -> store so answer() can retrieve it
     return {"success": True, "filename": safe_name}
+
+
+class AskRequest(BaseModel):
+    query: str
+
+
+@app.post("/ask")
+def ask(req: AskRequest):
+    return answer(req.query)   # {"answer", "citations", "context"}
